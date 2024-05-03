@@ -10,8 +10,14 @@ import (
 type Status string
 
 const (
-	StatusSuccess Status = "success"
-	StatusError   Status = "error"
+	StatusConfirmed         Status = "Confirmed"
+	StatusRejected          Status = "Rejected"
+	StatusWaitVerify        Status = "WaitVerify"
+	StatusPending           Status = "Pending"
+	StatusRefunded          Status = "Refunded"
+	StatusWaitConfirm       Status = "WaitConfirm"
+	StatusCancelingAccepted Status = "accepted"
+	StatusCancelingDeclined Status = "declined"
 )
 
 type Response struct {
