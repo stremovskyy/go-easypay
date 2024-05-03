@@ -25,12 +25,12 @@ type Response struct {
 	ActionType              string                  `json:"actionType"`
 	Action                  string                  `json:"action"`
 	AlternativeRedirectUrl  string                  `json:"alternativeRedirectUrl,omitempty"`
-	TransactionId           int64                   `json:"transactionId,omitempty"`
+	TransactionId           *int64                  `json:"transactionId,omitempty"`
 	RetrievalReferenceNo    string                  `json:"retrievalReferenceNo,omitempty"`
 	ForwardUrl              string                  `json:"forwardUrl,omitempty"`
 	ActionContent           string                  `json:"actionContent,omitempty"`
 	Error                   *Error                  `json:"error,omitempty"`
-	ResponseItems           ResponseItems           `json:"responseItems,omitempty"`
+	ResponseItems           *ResponseItems          `json:"responseItems,omitempty"`
 	PaymentInstrumentsTypes []PaymentInstrumentType `json:"paymentInstrumentsTypes,omitempty"`
 	LogoPath                *string                 `json:"logoPath,omitempty"`
 	HintImagesPath          *string                 `json:"hintImagesPath,omitempty"`
@@ -38,14 +38,24 @@ type Response struct {
 	AppId                   *string                 `json:"appId,omitempty"`
 	PageId                  *string                 `json:"pageId,omitempty"`
 	RequestedSessionId      string                  `json:"requestedSessionId"`
+	RedirectUrl             interface{}             `json:"redirectUrl"`
+	Status                  string                  `json:"status"`
 }
 
 // ResponseItems could contain various details specific to the transaction
 type ResponseItems struct {
-	SessionId         string `json:"sessionId,omitempty"`
-	MerchantOperation string `json:"merchantOperation,omitempty"`
-	Operation         string `json:"operation,omitempty"`
-	BankingDetails    string `json:"bankingDetails,omitempty"`
+	SessionId          string  `json:"SessionId"`
+	MerchantOpertion   string  `json:"MerchantOpertion"`
+	Operation          string  `json:"Operation"`
+	BankingDetails     string  `json:"BankingDetails"`
+	CardPan            string  `json:"Card.Pan"`
+	AuthorizationCode  *string `json:"AuthorizationCode"`
+	Rrn                *string `json:"Rrn"`
+	CardGuid           string  `json:"Card.Guid"`
+	IsSupportRecurrent string  `json:"IsSupportRecurrent"`
+	BankName           string  `json:"BankName"`
+	PaymentAssembly    string  `json:"Payment.Assembly"`
+	Date               string  `json:"Date"`
 }
 
 // PaymentInstrumentType provides details about available payment methods and conditions
