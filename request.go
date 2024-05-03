@@ -26,6 +26,7 @@ package go_easypay
 
 import (
 	"github.com/stremovskyy/go-easypay/currency"
+	"github.com/stremovskyy/go-easypay/easypay"
 )
 
 type Request struct {
@@ -152,4 +153,22 @@ func (r *Request) GetCardTokenID() string {
 	}
 
 	return r.PaymentMethod.Card.Name
+}
+
+func (r *Request) GetBankingDetails() *easypay.BankingDetails {
+	return &easypay.BankingDetails{
+		Payee: easypay.Payee{
+			ID:   r.Merchant.PayeeID,
+			Name: r.Merchant.PayeeName,
+			Bank: easypay.Bank{
+				Account: r.Merchant.PayeeBankAccount,
+			},
+		},
+		Payer: easypay.Payer{
+			Name: r.Merchant.PayerName,
+		},
+		Narrative: easypay.Narrative{
+			Name: r.Merchant.PayeeNarative,
+		},
+	}
 }

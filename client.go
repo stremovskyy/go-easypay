@@ -140,6 +140,7 @@ func (c *client) Payment(request *Request) (*easypay.Response, error) {
 		easypay.WithOneTimePayment(true),
 		easypay.WithCardToken(request.GetCardToken()),
 		easypay.WithCardTokenID(request.GetCardTokenID()),
+		easypay.WithBankingDetails(request.GetBankingDetails()),
 	)
 
 	apiResponse, err := c.easypayClient.Api(paymentRequest)

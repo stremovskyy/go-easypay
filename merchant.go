@@ -43,6 +43,12 @@ type Merchant struct {
 
 	// FailRedirect
 	FailRedirect string
+
+	PayeeID          string
+	PayeeName        string
+	PayeeBankAccount string
+	PayeeNarative    string
+	PayerName        string
 }
 
 func (m *Merchant) GetMerchantID() *int64 {

@@ -40,12 +40,17 @@ func main() {
 	client := go_easypay.NewDefaultClient()
 
 	merchant := &go_easypay.Merchant{
-		Name:            private.MerchantName,
-		PartnerKey:      private.PartnerKey,
-		ServiceKey:      private.ServiceKey,
-		SecretKey:       private.SecretKey,
-		SuccessRedirect: private.SuccessRedirect,
-		FailRedirect:    private.FailRedirect,
+		Name:             private.MerchantName,
+		PartnerKey:       private.PartnerKey,
+		ServiceKey:       private.ServiceKey,
+		SecretKey:        private.SecretKey,
+		SuccessRedirect:  private.SuccessRedirect,
+		FailRedirect:     private.FailRedirect,
+		PayeeID:          private.PayeeID,
+		PayeeName:        private.PayeeName,
+		PayeeBankAccount: private.PayeeBankAccount,
+		PayeeNarative:    private.PayeeNarative,
+		PayerName:        private.PayerName,
 	}
 
 	uuidString := uuid.New().String()

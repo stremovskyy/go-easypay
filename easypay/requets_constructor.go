@@ -186,3 +186,13 @@ func WithCardTokenID(id string) func(request *Request) {
 		rw.UserInfo.Phone = &id
 	}
 }
+
+func WithBankingDetails(details *BankingDetails) func(request *Request) {
+	return func(rw *Request) {
+		if rw.UserPaymentInstrument == nil {
+			rw.UserPaymentInstrument = &UserPaymentInstrument{}
+		}
+
+		rw.BankingDetails = details
+	}
+}
