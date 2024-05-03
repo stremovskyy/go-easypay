@@ -1,7 +1,21 @@
 package easypay
 
-type OrderResponse struct {
-	PaymentState            string                  `json:"paymentState"`
+import (
+	"encoding/json"
+	"fmt"
+	"html"
+	"strings"
+)
+
+type Status string
+
+const (
+	StatusSuccess Status = "success"
+	StatusError   Status = "error"
+)
+
+type Response struct {
+	PaymentState            Status                  `json:"paymentState"`
 	ActionType              string                  `json:"actionType"`
 	Action                  string                  `json:"action"`
 	AlternativeRedirectUrl  string                  `json:"alternativeRedirectUrl,omitempty"`
@@ -9,9 +23,15 @@ type OrderResponse struct {
 	RetrievalReferenceNo    string                  `json:"retrievalReferenceNo,omitempty"`
 	ForwardUrl              string                  `json:"forwardUrl,omitempty"`
 	ActionContent           string                  `json:"actionContent,omitempty"`
-	Error                   *Error                  `json:"error"`
+	Error                   *Error                  `json:"error,omitempty"`
 	ResponseItems           ResponseItems           `json:"responseItems,omitempty"`
 	PaymentInstrumentsTypes []PaymentInstrumentType `json:"paymentInstrumentsTypes,omitempty"`
+	LogoPath                *string                 `json:"logoPath,omitempty"`
+	HintImagesPath          *string                 `json:"hintImagesPath,omitempty"`
+	ApiVersion              *string                 `json:"apiVersion,omitempty"`
+	AppId                   *string                 `json:"appId,omitempty"`
+	PageId                  *string                 `json:"pageId,omitempty"`
+	RequestedSessionId      string                  `json:"requestedSessionId"`
 }
 
 // ResponseItems could contain various details specific to the transaction
@@ -46,7 +66,71 @@ type UserPaymentInstrumentDetails struct {
 
 // Error structure to encapsulate API error details
 type Error struct {
-	Code    string `json:"code,omitempty"`
-	Message string `json:"message"`
-	Details string `json:"details,omitempty"`
+	ErrorCode       *string `json:"errorCode"`
+	ClientErrorCode *string `json:"clientErrorCode"`
+	Title           *string `json:"title"`
+	Description     *string `json:"description"`
+	ErrorMessage    *string `json:"errorMessage"`
+	FieldErrors     []struct {
+		FieldName    string      `json:"fieldName"`
+		ErrorCode    interface{} `json:"errorCode"`
+		ErrorMessage string      `json:"errorMessage"`
+	} `json:"fieldErrors"`
+}
+
+// GetError returns a constructed error based on the response error details
+// CustomError is a custom type for formatting errors from the Response struct.
+type CustomError struct {
+	Resp *Response
+}
+
+func (ce *CustomError) Error() string {
+	if ce.Resp.Error == nil {
+		return "no error present"
+	}
+	e := ce.Resp.Error
+	var sb strings.Builder
+
+	sb.WriteString("API Error: ")
+	if e.ErrorCode != nil {
+		sb.WriteString(fmt.Sprintf("Code: %s, ", *e.ErrorCode))
+	}
+	if e.ClientErrorCode != nil {
+		sb.WriteString(fmt.Sprintf("Client Code: %s, ", *e.ClientErrorCode))
+	}
+	if e.Title != nil {
+		sb.WriteString(fmt.Sprintf("Title: %s, ", html.UnescapeString(*e.Title)))
+	}
+	if e.Description != nil {
+		sb.WriteString(fmt.Sprintf("Description: %s, ", html.UnescapeString(*e.Description)))
+	}
+	if e.ErrorMessage != nil {
+		sb.WriteString(fmt.Sprintf("Message: %s, ", html.UnescapeString(*e.ErrorMessage)))
+	}
+	if len(e.FieldErrors) > 0 {
+		sb.WriteString("Field Errors: ")
+		for _, fe := range e.FieldErrors {
+			sb.WriteString(fmt.Sprintf("[%s: Code: %v, Message: %s], ", fe.FieldName, fe.ErrorCode, html.UnescapeString(fe.ErrorMessage)))
+		}
+	}
+	return strings.TrimRight(sb.String(), ", ")
+}
+
+func (r *Response) GetError() error {
+	if r.Error != nil {
+		return &CustomError{Resp: r}
+	}
+	return nil
+}
+
+func (r *Response) App() *App {
+	return NewApp(r.LogoPath, r.ApiVersion, r.AppId)
+}
+
+func UnmarshalJSONResponse(data []byte) (*Response, error) {
+	var resp Response
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("error unmarshalling JSON response: %w", err)
+	}
+	return &resp, nil
 }

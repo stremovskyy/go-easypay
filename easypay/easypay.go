@@ -15,10 +15,10 @@ import (
 // Client is the interface for the EasyPay client
 type Client interface {
 	CreateApp(ctx context.Context) (*AppResponse, error)
-	CreatePage(ctx context.Context, appId string) (*PageResponse, error)
-	CreateOrder(ctx context.Context, req OrderRequest, appId, pageId string) (*OrderResponse, error)
-	CancelPayment(ctx context.Context, req CancelPaymentRequest) (*CancelPaymentResponse, error)
-	CheckPaymentStatus(ctx context.Context, req PaymentStatusRequest) (*PaymentStatusResponse, error)
+	CreatePage(ctx context.Context, appId string) (*Response, error)
+	CreateOrder(ctx context.Context, req Request, appId, pageId string) (*Response, error)
+	CancelPayment(ctx context.Context, req Request) (*CancelPaymentResponse, error)
+	CheckPaymentStatus(ctx context.Context, req Request) (*PaymentStatusResponse, error)
 }
 
 // API client holds the configuration for the API client
@@ -98,14 +98,14 @@ func (c *apiClient) CreateApp(ctx context.Context) (*AppResponse, error) {
 	}
 
 	if appResponse.Error != nil {
-		return nil, fmt.Errorf("API error: %s", appResponse.Error.Message)
+		return nil, fmt.Errorf("API error: %s", appResponse.Error)
 	}
 
 	return &appResponse, nil
 }
 
 // CreatePage creates a new session for the user and returns the PageId.
-func (c *apiClient) CreatePage(ctx context.Context, appId string) (*PageResponse, error) {
+func (c *apiClient) CreatePage(ctx context.Context, appId string) (*Response, error) {
 	url := fmt.Sprintf("%s/api/system/createPage", c.baseURL)
 	reqBody, err := json.Marshal(
 		map[string]string{
@@ -135,20 +135,20 @@ func (c *apiClient) CreatePage(ctx context.Context, appId string) (*PageResponse
 		return nil, fmt.Errorf("API request failed with status code %d", response.StatusCode)
 	}
 
-	var pageResponse PageResponse
+	var pageResponse Response
 	if err := json.NewDecoder(response.Body).Decode(&pageResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	if pageResponse.Error != nil {
-		return nil, fmt.Errorf("API error: %s", pageResponse.Error.Message)
+		return nil, fmt.Errorf("API error: %s", pageResponse.Error)
 	}
 
 	return &pageResponse, nil
 }
 
 // CreateOrder sends a request to create an order
-func (c *apiClient) CreateOrder(ctx context.Context, req OrderRequest, appId, pageId string) (*OrderResponse, error) {
+func (c *apiClient) CreateOrder(ctx context.Context, req Request, appId, pageId string) (*Response, error) {
 	url := fmt.Sprintf("%s/api/merchant/createOrder", c.baseURL)
 	requestBody, err := json.Marshal(req)
 	if err != nil {
@@ -180,7 +180,7 @@ func (c *apiClient) CreateOrder(ctx context.Context, req OrderRequest, appId, pa
 		return nil, fmt.Errorf("API request failed with status code %d", response.StatusCode)
 	}
 
-	var orderResponse OrderResponse
+	var orderResponse Response
 	if err := json.NewDecoder(response.Body).Decode(&orderResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -189,7 +189,7 @@ func (c *apiClient) CreateOrder(ctx context.Context, req OrderRequest, appId, pa
 }
 
 // CheckPaymentStatus checks the status of a payment by transaction or order ID
-func (c *apiClient) CheckPaymentStatus(ctx context.Context, req PaymentStatusRequest) (*PaymentStatusResponse, error) {
+func (c *apiClient) CheckPaymentStatus(ctx context.Context, req Request) (*PaymentStatusResponse, error) {
 	url := fmt.Sprintf("%s/api/merchant/orderState", c.baseURL)
 	requestBody, err := json.Marshal(req)
 	if err != nil {
@@ -229,7 +229,7 @@ func (c *apiClient) CheckPaymentStatus(ctx context.Context, req PaymentStatusReq
 }
 
 // CancelPayment cancels an accepted payment
-func (c *apiClient) CancelPayment(ctx context.Context, req CancelPaymentRequest) (*CancelPaymentResponse, error) {
+func (c *apiClient) CancelPayment(ctx context.Context, req Request) (*CancelPaymentResponse, error) {
 	url := fmt.Sprintf("%s/api/merchant/cancelOrder", c.baseURL)
 	requestBody, err := json.Marshal(req)
 	if err != nil {
