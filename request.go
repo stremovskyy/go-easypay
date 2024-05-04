@@ -156,19 +156,27 @@ func (r *Request) GetCardTokenID() string {
 }
 
 func (r *Request) GetBankingDetails() *easypay.BankingDetails {
-	return &easypay.BankingDetails{
-		Payee: easypay.Payee{
+	bd := &easypay.BankingDetails{
+		Payee: &easypay.Payee{
 			ID:   r.Merchant.PayeeID,
 			Name: r.Merchant.PayeeName,
-			Bank: easypay.Bank{
-				Account: r.Merchant.PayeeBankAccount,
-			},
 		},
-		Payer: easypay.Payer{
-			Name: r.Merchant.PayerName,
-		},
-		Narrative: easypay.Narrative{
+		Narrative: &easypay.Narrative{
 			Name: r.Merchant.PayeeNarative,
 		},
 	}
+
+	if r.Merchant.PayeeBankAccount != "" {
+		bd.Payee.Bank = &easypay.Bank{
+			Account: r.Merchant.PayeeBankAccount,
+		}
+	}
+
+	if r.Merchant.PayerName != "" {
+		bd.Payer = &easypay.Payer{
+			Name: r.Merchant.PayerName,
+		}
+	}
+
+	return bd
 }

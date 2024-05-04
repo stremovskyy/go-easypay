@@ -57,16 +57,16 @@ type URLs struct {
 
 // BankingDetails holds banking information
 type BankingDetails struct {
-	Payee     Payee     `json:"payee"`
-	Payer     Payer     `json:"payer"`
-	Narrative Narrative `json:"narrative"`
+	Payee     *Payee     `json:"payee,omitempty"`
+	Payer     *Payer     `json:"payer,omitempty"`
+	Narrative *Narrative `json:"narrative,omitempty"`
 }
 
 // Payee details about the payee or payer
 type Payee struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Bank Bank   `json:"bank"`
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+	Bank *Bank  `json:"bank,omitempty"`
 }
 
 // Payer details about the payer
