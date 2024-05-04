@@ -81,9 +81,9 @@ type Narrative struct {
 
 // Bank information
 type Bank struct {
-	Name    string `json:"name"`
-	MFO     string `json:"mfo"`
-	Account string `json:"account"`
+	Name    string `json:"name,omitempty"`
+	MFO     string `json:"mfo,omitempty"`
+	Account string `json:"account,omitempty"`
 }
 
 // Recurrent details for recurring payments
