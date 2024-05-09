@@ -33,13 +33,15 @@ const (
 	CreateAppURL       = baseUrl + "/api/system/createApp"
 	CreatePageURL      = baseUrl + "/api/system/createPage"
 	CreateOrderURL     = baseUrl + "/api/merchant/createOrder"
-	CancelPayment      = baseUrl + "/api/merchant/cancelPayment"
-	CheckPaymentStatus = baseUrl + "/api/merchant/checkPaymentStatus"
-	CardTokenCreate    = baseUrl + "/api/merchant/tokenCard/create"
+	CancelOrderURL     = baseUrl + "/api/merchant/CancelOrder"
+	CheckOrderStateURL = baseUrl + "/api/merchant/orderState"
+	CardTokenCreateURL = baseUrl + "/api/merchant/tokenCard/create"
+	UnHoldURL          = baseUrl + "/api/merchant/unHoldOrder"
 )
 
 type PaymentOperation string
 
 const (
 	PaymentOperationPaymentTokenization PaymentOperation = "PaymentTokenization"
+	PaymentOperationPaymentHold         PaymentOperation = "Hold"
 )

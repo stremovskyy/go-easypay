@@ -78,7 +78,7 @@ func (c *client) VerificationLink(request *Request) (*url.URL, error) {
 	}
 
 	createTokenRequest := easypay.NewRequest(
-		consts.CardTokenCreate,
+		consts.CardTokenCreateURL,
 		easypay.WithPartnerKeyHeader(request.Merchant.getPartnerKey()),
 		easypay.WithAppIDHeader(c.app.AppID()),
 		easypay.WithPageIDHeader(pageID),
@@ -102,7 +102,39 @@ func (c *client) VerificationLink(request *Request) (*url.URL, error) {
 }
 
 func (c *client) Status(request *Request) (*easypay.Response, error) {
-	panic("implement me")
+	if request == nil {
+		return nil, ErrRequestIsNil
+	}
+
+	if c.app == nil || !c.app.IsValid() {
+		err := c.createApp(request.Merchant)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create App: %v", err)
+		}
+	}
+
+	pageID, err := c.createPageID(request)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create Page ID: %v", err)
+	}
+
+	cancelRequest := easypay.NewRequest(
+		consts.CheckOrderStateURL,
+		easypay.WithPartnerKeyHeader(request.Merchant.getPartnerKey()),
+		easypay.WithAppIDHeader(c.app.AppID()),
+		easypay.WithPageIDHeader(pageID),
+		easypay.WithSecretKey(request.Merchant.GetSecretKey()),
+		easypay.WithRootServiceKey(request.Merchant.GetServiceKey()),
+		easypay.WithTransactionID(request.GetTransactionID()),
+		easypay.WithRootOrderID(request.GetPaymentID()),
+	)
+
+	apiResponse, err := c.easypayClient.Api(cancelRequest)
+	if err != nil {
+		return nil, fmt.Errorf("error while creating payment: %v", err)
+	}
+
+	return apiResponse, nil
 }
 
 func (c *client) PaymentURL(request *Request) (*easypay.Response, error) {
@@ -152,15 +184,122 @@ func (c *client) Payment(request *Request) (*easypay.Response, error) {
 }
 
 func (c *client) Hold(request *Request) (*easypay.Response, error) {
-	panic("implement me")
+	if request == nil {
+		return nil, ErrRequestIsNil
+	}
+
+	if c.app == nil || !c.app.IsValid() {
+		err := c.createApp(request.Merchant)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create App: %v", err)
+		}
+	}
+
+	pageID, err := c.createPageID(request)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create Page ID: %v", err)
+	}
+
+	holdRequest := easypay.NewRequest(
+		consts.CreateOrderURL,
+		easypay.WithPaymentOperation(consts.PaymentOperationPaymentHold),
+		easypay.WithPartnerKeyHeader(request.Merchant.getPartnerKey()),
+		easypay.WithAppIDHeader(c.app.AppID()),
+		easypay.WithPageIDHeader(pageID),
+		easypay.WithSecretKey(request.Merchant.GetSecretKey()),
+		easypay.WithAdditionalWebhook(request.GetWebhookURL()),
+		easypay.WithOrderID(request.GetPaymentID()),
+		easypay.WithAmount(request.GetAmount()),
+		easypay.WithDescription(request.GetDescription()),
+		easypay.WithServiceKey(request.Merchant.GetServiceKey()),
+		easypay.WithOneTimePayment(true),
+		easypay.WithCardToken(request.GetCardToken()),
+		easypay.WithCardTokenID(request.GetCardTokenID()),
+		easypay.WithBankingDetails(request.GetBankingDetails()),
+	)
+
+	apiResponse, err := c.easypayClient.Api(holdRequest)
+	if err != nil {
+		return nil, fmt.Errorf("error while creating payment: %v", err)
+	}
+
+	return apiResponse, nil
 }
 
-func (c *client) Capture(invoiceRequest *Request) (*easypay.Response, error) {
-	panic("implement me")
+func (c *client) Capture(request *Request) (*easypay.Response, error) {
+	if request == nil {
+		return nil, ErrRequestIsNil
+	}
+
+	if c.app == nil || !c.app.IsValid() {
+		err := c.createApp(request.Merchant)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create App: %v", err)
+		}
+	}
+
+	pageID, err := c.createPageID(request)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create Page ID: %v", err)
+	}
+
+	CaptureRequest := easypay.NewRequest(
+		consts.UnHoldURL,
+		easypay.WithPartnerKeyHeader(request.Merchant.getPartnerKey()),
+		easypay.WithAppIDHeader(c.app.AppID()),
+		easypay.WithPageIDHeader(pageID),
+		easypay.WithSecretKey(request.Merchant.GetSecretKey()),
+		easypay.WithTransactionID(request.GetTransactionID()),
+		easypay.WithRootAmount(request.GetAmount()),
+		easypay.WithRootOrderID(request.GetPaymentID()),
+		easypay.WithWebhook(request.GetWebhookURL()),
+		easypay.WithRootServiceKey(request.Merchant.GetServiceKey()),
+	)
+
+	apiResponse, err := c.easypayClient.Api(CaptureRequest)
+	if err != nil {
+		return nil, fmt.Errorf("error while creating payment: %v", err)
+	}
+
+	return apiResponse, nil
 }
 
 func (c *client) Refund(request *Request) (*easypay.Response, error) {
-	panic("implement me")
+	if request == nil {
+		return nil, ErrRequestIsNil
+	}
+
+	if c.app == nil || !c.app.IsValid() {
+		err := c.createApp(request.Merchant)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create App: %v", err)
+		}
+	}
+
+	pageID, err := c.createPageID(request)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create Page ID: %v", err)
+	}
+
+	cancelRequest := easypay.NewRequest(
+		consts.CancelOrderURL,
+		easypay.WithPartnerKeyHeader(request.Merchant.getPartnerKey()),
+		easypay.WithAppIDHeader(c.app.AppID()),
+		easypay.WithPageIDHeader(pageID),
+		easypay.WithSecretKey(request.Merchant.GetSecretKey()),
+		easypay.WithRootServiceKey(request.Merchant.GetServiceKey()),
+		easypay.WithTransactionID(request.GetTransactionID()),
+		easypay.WithRootOrderID(request.GetPaymentID()),
+		easypay.WithRootAmount(request.GetAmount()),
+		easypay.WithWebhook(request.GetWebhookURL()),
+	)
+
+	apiResponse, err := c.easypayClient.Api(cancelRequest)
+	if err != nil {
+		return nil, fmt.Errorf("error while creating payment: %v", err)
+	}
+
+	return apiResponse, nil
 }
 
 func (c *client) Credit(request *Request) (*easypay.Response, error) {

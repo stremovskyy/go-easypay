@@ -37,33 +37,39 @@ func main() {
 	client := go_easypay.NewDefaultClient()
 
 	merchant := &go_easypay.Merchant{
-		Name:            private.MerchantName,
-		PartnerKey:      private.PartnerKey,
-		ServiceKey:      private.ServiceKey,
-		SecretKey:       private.SecretKey,
-		SuccessRedirect: private.SuccessRedirect,
-		FailRedirect:    private.FailRedirect,
+		Name:             private.MerchantName,
+		PartnerKey:       private.PartnerKey,
+		ServiceKey:       private.ServiceKey,
+		SecretKey:        private.SecretKey,
+		SuccessRedirect:  private.SuccessRedirect,
+		FailRedirect:     private.FailRedirect,
+		PayeeID:          private.PayeeID,
+		PayeeName:        private.PayeeName,
+		PayeeBankAccount: private.PayeeBankAccount,
+		PayeeNarative:    private.PayeeNarative,
+		PayerName:        private.PayerName,
 	}
 
-	statusRequest := &go_easypay.Request{
+	captureRequest := &go_easypay.Request{
 		Merchant: merchant,
 		PaymentData: &go_easypay.PaymentData{
 			EasypayPaymentID: utils.Ref(int64(private.EasypayPaymentID)),
+			Amount:           1.0,
 			PaymentID:        utils.Ref(private.EasypayOrderID),
 		},
 	}
 
 	client.SetLogLevel(log.LevelDebug)
-	statusRequest.SetWebhookURL(utils.Ref(private.WebhookURL))
+	captureRequest.SetWebhookURL(utils.Ref(private.WebhookURL))
 
-	statusResponse, err := client.Status(statusRequest)
+	captureResponse, err := client.Capture(captureRequest)
 	if err != nil {
 		panic(err)
 	}
 
-	if statusResponse.GetError() != nil {
-		panic(statusResponse.GetError())
+	if captureResponse.GetError() != nil {
+		panic(captureResponse.GetError())
 	}
 
-	fmt.Printf("Payment status: %s\n", statusResponse.PaymentState)
+	fmt.Printf("Payment is %s", captureResponse.PaymentState)
 }

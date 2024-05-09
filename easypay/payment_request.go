@@ -14,7 +14,7 @@ type Request struct {
 	BrowserInfo           *BrowserInfo           `json:"browserInfo,omitempty"`
 	ServiceKey            *string                `json:"serviceKey,omitempty"`
 	OrderID               *string                `json:"orderId,omitempty"`
-	TransactionID         *string                `json:"transactionId,omitempty"`
+	TransactionID         *int64                 `json:"transactionId,omitempty"`
 	Amount                *float64               `json:"amount,omitempty"` // optional for full cancellation
 	Phone                 *string                `json:"phone,omitempty"`
 

@@ -27,7 +27,10 @@ package main
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	go_easypay "github.com/stremovskyy/go-easypay"
+	"github.com/stremovskyy/go-easypay/currency"
 	"github.com/stremovskyy/go-easypay/internal/utils"
 	"github.com/stremovskyy/go-easypay/log"
 	"github.com/stremovskyy/go-easypay/private"
@@ -37,33 +40,55 @@ func main() {
 	client := go_easypay.NewDefaultClient()
 
 	merchant := &go_easypay.Merchant{
-		Name:            private.MerchantName,
-		PartnerKey:      private.PartnerKey,
-		ServiceKey:      private.ServiceKey,
-		SecretKey:       private.SecretKey,
-		SuccessRedirect: private.SuccessRedirect,
-		FailRedirect:    private.FailRedirect,
+		Name:             private.MerchantName,
+		PartnerKey:       private.PartnerKey,
+		ServiceKey:       private.ServiceKey,
+		SecretKey:        private.SecretKey,
+		SuccessRedirect:  private.SuccessRedirect,
+		FailRedirect:     private.FailRedirect,
+		PayeeID:          private.PayeeID,
+		PayeeName:        private.PayeeName,
+		PayeeBankAccount: private.PayeeBankAccount,
+		PayeeNarative:    private.PayeeNarative,
+		PayerName:        private.PayerName,
 	}
 
-	statusRequest := &go_easypay.Request{
+	uuidString := uuid.New().String()
+
+	holdRequest := &go_easypay.Request{
 		Merchant: merchant,
+		PaymentMethod: &go_easypay.PaymentMethod{
+			Card: &go_easypay.Card{
+				Name:  private.CardID,
+				Token: utils.Ref(private.CardToken),
+			},
+		},
 		PaymentData: &go_easypay.PaymentData{
-			EasypayPaymentID: utils.Ref(int64(private.EasypayPaymentID)),
-			PaymentID:        utils.Ref(private.EasypayOrderID),
+			PaymentID:   utils.Ref(uuidString),
+			Amount:      1.0,
+			Currency:    currency.UAH,
+			OrderID:     uuidString,
+			Description: "Test payment: " + uuidString,
+		},
+		PersonalData: &go_easypay.PersonalData{
+			UserID:    utils.Ref(123),
+			FirstName: utils.Ref("John"),
+			LastName:  utils.Ref("Doe"),
+			TaxID:     utils.Ref("1234567890"),
 		},
 	}
 
 	client.SetLogLevel(log.LevelDebug)
-	statusRequest.SetWebhookURL(utils.Ref(private.WebhookURL))
+	holdRequest.SetWebhookURL(utils.Ref(private.WebhookURL))
 
-	statusResponse, err := client.Status(statusRequest)
+	holdResponse, err := client.Hold(holdRequest)
 	if err != nil {
 		panic(err)
 	}
 
-	if statusResponse.GetError() != nil {
-		panic(statusResponse.GetError())
+	if holdResponse.GetError() != nil {
+		panic(holdResponse.GetError())
 	}
 
-	fmt.Printf("Payment status: %s\n", statusResponse.PaymentState)
+	fmt.Printf("Payment: %s is %s", uuidString, holdResponse.PaymentState)
 }

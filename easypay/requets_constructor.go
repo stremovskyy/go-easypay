@@ -51,6 +51,11 @@ func WithAmount(a float64) func(*Request) {
 		rw.Order.Amount = &a
 	}
 }
+func WithRootAmount(a float64) func(*Request) {
+	return func(rw *Request) {
+		rw.Amount = &a
+	}
+}
 
 func WithPartnerKeyHeader(key string) func(request *Request) {
 	return func(rw *Request) {
@@ -112,6 +117,10 @@ func WithAdditionalWebhook(url *string) func(request *Request) {
 			}
 		}
 
+		if rw.Order.AdditionalItems == nil {
+			rw.Order.AdditionalItems = utils.Ref(make(map[string]string))
+		}
+
 		(*rw.Order.AdditionalItems)["Merchant.UrlNotify"] = *url
 	}
 }
@@ -123,6 +132,12 @@ func WithOrderID(id *string) func(request *Request) {
 		}
 
 		rw.Order.OrderID = id
+	}
+}
+
+func WithRootOrderID(id *string) func(request *Request) {
+	return func(rw *Request) {
+		rw.OrderID = id
 	}
 }
 
@@ -143,6 +158,12 @@ func WithServiceKey(key string) func(request *Request) {
 		}
 
 		rw.Order.ServiceKey = &key
+	}
+}
+
+func WithRootServiceKey(key string) func(request *Request) {
+	return func(rw *Request) {
+		rw.ServiceKey = &key
 	}
 }
 
@@ -194,5 +215,11 @@ func WithBankingDetails(details *BankingDetails) func(request *Request) {
 		}
 
 		rw.BankingDetails = details
+	}
+}
+
+func WithTransactionID(transactionID *int64) func(request *Request) {
+	return func(rw *Request) {
+		rw.TransactionID = transactionID
 	}
 }

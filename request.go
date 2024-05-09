@@ -180,3 +180,12 @@ func (r *Request) GetBankingDetails() *easypay.BankingDetails {
 
 	return bd
 }
+
+func (r *Request) GetTransactionID() *int64 {
+	if r.PaymentData == nil {
+		return nil
+	}
+
+	return r.PaymentData.EasypayPaymentID
+
+}
