@@ -18,6 +18,7 @@ const (
 	StatusWaitConfirm       Status = "WaitConfirm"
 	StatusCancelingAccepted Status = "accepted"
 	StatusCancelingDeclined Status = "declined"
+	PaymentHold             Status = "paymenthold"
 )
 
 type Response struct {
@@ -40,6 +41,10 @@ type Response struct {
 	RequestedSessionId      string                  `json:"requestedSessionId"`
 	RedirectUrl             interface{}             `json:"redirectUrl"`
 	Status                  string                  `json:"status"`
+	MerchantKey             *string                 `json:"merchantKey,omitempty"`
+	RefundTransactionId     *int                    `json:"refundTransactionId,omitempty"`
+	OrderId                 *string                 `json:"orderId,omitempty"`
+	Amount                  *float64                `json:"amount,omitempty"`
 }
 
 // ResponseItems could contain various details specific to the transaction
