@@ -124,7 +124,7 @@ func (r *Request) IsMobile() bool {
 		return false
 	}
 
-	return r.PaymentData.IsMobile || r.PaymentMethod.AppleContainer != nil
+	return r.PaymentData.IsMobile && (r.PaymentMethod.AppleContainer != nil || r.PaymentMethod.GoogleToken != nil)
 }
 
 func (r *Request) GetAppleContainer() *string {

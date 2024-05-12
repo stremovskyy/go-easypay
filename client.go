@@ -158,8 +158,7 @@ func (c *client) Payment(request *Request) (*easypay.Response, error) {
 		return nil, fmt.Errorf("cannot create Page ID: %v", err)
 	}
 
-	paymentRequest := easypay.NewRequest(
-		consts.CreateOrderURL,
+	requestOptions := []func(*easypay.Request){
 		easypay.WithPartnerKeyHeader(request.Merchant.getPartnerKey()),
 		easypay.WithAppIDHeader(c.app.AppID()),
 		easypay.WithPageIDHeader(pageID),
@@ -170,9 +169,23 @@ func (c *client) Payment(request *Request) (*easypay.Response, error) {
 		easypay.WithDescription(request.GetDescription()),
 		easypay.WithServiceKey(request.Merchant.GetServiceKey()),
 		easypay.WithOneTimePayment(true),
-		easypay.WithCardToken(request.GetCardToken()),
-		easypay.WithCardTokenID(request.GetCardTokenID()),
 		easypay.WithBankingDetails(request.GetBankingDetails()),
+	}
+
+	if request.IsMobile() {
+		if request.IsApplePay() {
+			requestOptions = append(requestOptions, easypay.WithApplePayContainer(request.GetAppleContainer()))
+		} else {
+			requestOptions = append(requestOptions, easypay.WithGooglePayToken(request.GetGoogleToken()))
+		}
+	} else {
+		requestOptions = append(requestOptions, easypay.WithCardToken(request.GetCardToken()))
+		requestOptions = append(requestOptions, easypay.WithCardTokenID(request.GetCardTokenID()))
+	}
+
+	paymentRequest := easypay.NewRequest(
+		consts.CreateOrderURL,
+		requestOptions...,
 	)
 
 	apiResponse, err := c.easypayClient.Api(paymentRequest)
@@ -200,8 +213,7 @@ func (c *client) Hold(request *Request) (*easypay.Response, error) {
 		return nil, fmt.Errorf("cannot create Page ID: %v", err)
 	}
 
-	holdRequest := easypay.NewRequest(
-		consts.CreateOrderURL,
+	requestOptions := []func(*easypay.Request){
 		easypay.WithPaymentOperation(consts.PaymentOperationPaymentHold),
 		easypay.WithPartnerKeyHeader(request.Merchant.getPartnerKey()),
 		easypay.WithAppIDHeader(c.app.AppID()),
@@ -213,9 +225,23 @@ func (c *client) Hold(request *Request) (*easypay.Response, error) {
 		easypay.WithDescription(request.GetDescription()),
 		easypay.WithServiceKey(request.Merchant.GetServiceKey()),
 		easypay.WithOneTimePayment(true),
-		easypay.WithCardToken(request.GetCardToken()),
-		easypay.WithCardTokenID(request.GetCardTokenID()),
 		easypay.WithBankingDetails(request.GetBankingDetails()),
+	}
+
+	if request.IsMobile() {
+		if request.IsApplePay() {
+			requestOptions = append(requestOptions, easypay.WithApplePayContainer(request.GetAppleContainer()))
+		} else {
+			requestOptions = append(requestOptions, easypay.WithGooglePayToken(request.GetGoogleToken()))
+		}
+	} else {
+		requestOptions = append(requestOptions, easypay.WithCardToken(request.GetCardToken()))
+		requestOptions = append(requestOptions, easypay.WithCardTokenID(request.GetCardTokenID()))
+	}
+
+	holdRequest := easypay.NewRequest(
+		consts.CreateOrderURL,
+		requestOptions...,
 	)
 
 	apiResponse, err := c.easypayClient.Api(holdRequest)

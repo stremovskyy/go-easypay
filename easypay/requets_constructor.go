@@ -25,6 +25,8 @@
 package easypay
 
 import (
+	"strings"
+
 	"github.com/stremovskyy/go-easypay/consts"
 	"github.com/stremovskyy/go-easypay/internal/utils"
 )
@@ -221,5 +223,30 @@ func WithBankingDetails(details *BankingDetails) func(request *Request) {
 func WithTransactionID(transactionID *int64) func(request *Request) {
 	return func(rw *Request) {
 		rw.TransactionID = transactionID
+	}
+}
+
+// setPaymentInstrument sets the payment instrument type and token on the Request object.
+func setPaymentInstrument(rw *Request, instrumentType string, token *string) {
+	if rw.UserPaymentInstrument == nil {
+		rw.UserPaymentInstrument = &UserPaymentInstrument{}
+	}
+	rw.UserPaymentInstrument.InstrumentType = utils.Ref(instrumentType)
+
+	if token != nil {
+		escapedInnerJson := strings.ReplaceAll(*token, `"`, `\"`)
+		rw.UserPaymentInstrument.Token = &escapedInnerJson
+	}
+}
+
+func WithGooglePayToken(token *string) func(*Request) {
+	return func(rw *Request) {
+		setPaymentInstrument(rw, "GooglePay", token)
+	}
+}
+
+func WithApplePayContainer(container *string) func(*Request) {
+	return func(rw *Request) {
+		setPaymentInstrument(rw, "ApplePay", container)
 	}
 }

@@ -125,6 +125,7 @@ type UserPaymentInstrument struct {
 	Pan            *string `json:"pan,omitempty"`
 	Expire         *string `json:"expire,omitempty"`
 	CVV            *string `json:"cvv,omitempty"`
+	Token          *string `json:"token,omitempty"`
 }
 
 // PartnerInfo information about the partner
