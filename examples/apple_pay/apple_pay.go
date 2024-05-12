@@ -66,6 +66,7 @@ func main() {
 			Currency:    currency.UAH,
 			OrderID:     uuidString,
 			Description: "Test payment: " + uuidString,
+			IsMobile:    true,
 		},
 		PersonalData: &go_easypay.PersonalData{
 			UserID:    utils.Ref(123),

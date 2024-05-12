@@ -25,8 +25,6 @@
 package easypay
 
 import (
-	"strings"
-
 	"github.com/stremovskyy/go-easypay/consts"
 	"github.com/stremovskyy/go-easypay/internal/utils"
 )
@@ -231,12 +229,9 @@ func setPaymentInstrument(rw *Request, instrumentType string, token *string) {
 	if rw.UserPaymentInstrument == nil {
 		rw.UserPaymentInstrument = &UserPaymentInstrument{}
 	}
-	rw.UserPaymentInstrument.InstrumentType = utils.Ref(instrumentType)
 
-	if token != nil {
-		escapedInnerJson := strings.ReplaceAll(*token, `"`, `\"`)
-		rw.UserPaymentInstrument.Token = &escapedInnerJson
-	}
+	rw.UserPaymentInstrument.InstrumentType = utils.Ref(instrumentType)
+	rw.UserPaymentInstrument.Token = token
 }
 
 func WithGooglePayToken(token *string) func(*Request) {
