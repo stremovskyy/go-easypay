@@ -120,12 +120,13 @@ type SplitItem struct {
 
 // UserPaymentInstrument payment method details
 type UserPaymentInstrument struct {
-	InstrumentType *string `json:"instrumentType"`
-	CardGuid       *string `json:"cardGuid,omitempty"`
-	Pan            *string `json:"pan,omitempty"`
-	Expire         *string `json:"expire,omitempty"`
-	CVV            *string `json:"cvv,omitempty"`
-	Token          *string `json:"token,omitempty"`
+	InstrumentType    *string `json:"instrumentType"`
+	CardGuid          *string `json:"cardGuid,omitempty"`
+	Pan               *string `json:"pan,omitempty"`
+	Expire            *string `json:"expire,omitempty"`
+	CVV               *string `json:"cvv,omitempty"`
+	Token             *string `json:"token,omitempty"`
+	GatewayMerchantId *string `json:"gatewayMerchantId,omitempty"`
 }
 
 // PartnerInfo information about the partner

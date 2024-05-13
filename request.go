@@ -189,3 +189,11 @@ func (r *Request) GetTransactionID() *int64 {
 	return r.PaymentData.EasypayPaymentID
 
 }
+
+func (r *Request) GetAppleMerchantID() *string {
+	if r.Merchant == nil || r.Merchant.AppleMerchantID == nil {
+		return nil
+	}
+
+	return r.Merchant.AppleMerchantID
+}

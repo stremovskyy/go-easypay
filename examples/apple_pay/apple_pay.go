@@ -51,6 +51,7 @@ func main() {
 		PayeeBankAccount: private.PayeeBankAccount,
 		PayeeNarative:    private.PayeeNarative,
 		PayerName:        private.PayerName,
+		AppleMerchantID:  utils.Ref(private.AppleMerchantID),
 	}
 
 	uuidString := uuid.New().String()

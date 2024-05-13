@@ -49,6 +49,7 @@ type Merchant struct {
 	PayeeBankAccount string
 	PayeeNarative    string
 	PayerName        string
+	AppleMerchantID  *string
 }
 
 func (m *Merchant) GetMerchantID() *int64 {

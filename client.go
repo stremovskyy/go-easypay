@@ -175,6 +175,7 @@ func (c *client) Payment(request *Request) (*easypay.Response, error) {
 	if request.IsMobile() {
 		if request.IsApplePay() {
 			requestOptions = append(requestOptions, easypay.WithApplePayContainer(request.GetAppleContainer()))
+			requestOptions = append(requestOptions, easypay.WithApplePayMerchantID(request.GetAppleMerchantID()))
 		} else {
 			requestOptions = append(requestOptions, easypay.WithGooglePayToken(request.GetGoogleToken()))
 		}
@@ -231,6 +232,7 @@ func (c *client) Hold(request *Request) (*easypay.Response, error) {
 	if request.IsMobile() {
 		if request.IsApplePay() {
 			requestOptions = append(requestOptions, easypay.WithApplePayContainer(request.GetAppleContainer()))
+			requestOptions = append(requestOptions, easypay.WithApplePayMerchantID(request.GetAppleMerchantID()))
 		} else {
 			requestOptions = append(requestOptions, easypay.WithGooglePayToken(request.GetGoogleToken()))
 		}
