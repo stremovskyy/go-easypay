@@ -246,7 +246,7 @@ func WithApplePayContainer(container *string) func(*Request) {
 	}
 }
 
-func WithApplePayMerchantID(id *string) func(*Request) {
+func WithPaymentInstrumentMerchantID(id *string) func(*Request) {
 	return func(rw *Request) {
 		if rw.UserPaymentInstrument == nil {
 			rw.UserPaymentInstrument = &UserPaymentInstrument{}

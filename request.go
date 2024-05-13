@@ -197,3 +197,11 @@ func (r *Request) GetAppleMerchantID() *string {
 
 	return r.Merchant.AppleMerchantID
 }
+
+func (r *Request) GetGoogleMerchantID() *string {
+	if r.Merchant == nil || r.Merchant.GoogleMerchantID == nil {
+		return nil
+	}
+
+	return r.Merchant.GoogleMerchantID
+}
