@@ -127,6 +127,7 @@ func (c *client) Status(request *Request) (*easypay.Response, error) {
 		easypay.WithRootServiceKey(request.Merchant.GetServiceKey()),
 		easypay.WithTransactionID(request.GetTransactionID()),
 		easypay.WithRootOrderID(request.GetPaymentID()),
+		easypay.WithoutError(),
 	)
 
 	apiResponse, err := c.easypayClient.Api(cancelRequest)

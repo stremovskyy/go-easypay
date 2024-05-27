@@ -255,3 +255,9 @@ func WithPaymentInstrumentMerchantID(id *string) func(*Request) {
 		rw.UserPaymentInstrument.GatewayMerchantId = id
 	}
 }
+
+func WithoutError() func(request *Request) {
+	return func(rw *Request) {
+		rw.SkipGeneratingError = true
+	}
+}

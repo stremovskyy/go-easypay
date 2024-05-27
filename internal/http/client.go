@@ -101,7 +101,7 @@ func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger) (*
 		return nil, err
 	}
 
-	if response.GetError() != nil {
+	if !apiRequest.SkipGeneratingError && response.GetError() != nil {
 		return nil, fmt.Errorf("easypay error: %v", response.GetError())
 	}
 

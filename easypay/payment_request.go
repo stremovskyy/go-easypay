@@ -18,9 +18,10 @@ type Request struct {
 	Amount                *float64               `json:"amount,omitempty"` // optional for full cancellation
 	Phone                 *string                `json:"phone,omitempty"`
 
-	Url       string            `json:"-"`
-	Headers   map[string]string `json:"-"`
-	SecretKey string            `json:"-"`
+	Url                 string            `json:"-"`
+	Headers             map[string]string `json:"-"`
+	SecretKey           string            `json:"-"`
+	SkipGeneratingError bool              `json:"-"`
 }
 
 // UserInfo holds user-specific information
