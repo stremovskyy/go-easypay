@@ -164,7 +164,7 @@ func tagsRetriever(request *easypay.Request) map[string]string {
 	}
 
 	if request.TransactionID != nil {
-		tags["transaction_id"] = fmt.Sprintf("%s", *request.TransactionID)
+		tags["transaction_id"] = fmt.Sprintf("%d", *request.TransactionID)
 	}
 
 	return tags
