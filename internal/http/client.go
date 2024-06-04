@@ -197,6 +197,10 @@ func (c *Client) WithRecorder(rec recorder.Recorder) *Client {
 	return c
 }
 
+func (c *Client) SetRecorder(r recorder.Recorder) {
+	c.recorder = r
+}
+
 func NewClient(options *Options) *Client {
 	dialer := &net.Dialer{
 		Timeout:   30 * time.Second,
