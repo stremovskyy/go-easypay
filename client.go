@@ -32,6 +32,7 @@ import (
 	"github.com/stremovskyy/go-easypay/easypay"
 	"github.com/stremovskyy/go-easypay/internal/http"
 	"github.com/stremovskyy/go-easypay/log"
+	"github.com/stremovskyy/recorder"
 )
 
 type client struct {
@@ -48,6 +49,13 @@ func NewDefaultClient() Easypay {
 		easypayClient: http.NewClient(http.DefaultOptions()),
 	}
 }
+
+func NewClientWithRecorder(rec recorder.Recorder) Easypay {
+	return &client{
+		easypayClient: http.NewClient(http.DefaultOptions()).WithRecorder(rec),
+	}
+}
+
 func NewClient(options ...Option) Easypay {
 	c := &client{
 		easypayClient: http.NewClient(http.DefaultOptions()),
@@ -341,7 +349,7 @@ func (c *client) createApp(merchant *Merchant) error {
 		easypay.WithPartnerKeyHeader(merchant.getPartnerKey()),
 	)
 
-	response, err := c.easypayClient.Api(createAppRequest)
+	response, err := c.easypayClient.NotRecordedApi(createAppRequest)
 	if err != nil {
 		return fmt.Errorf("cannot get App response: %v", err)
 	}
@@ -358,7 +366,7 @@ func (c *client) createPageID(request *Request) (*string, error) {
 		easypay.WithAppIDHeader(c.app.AppID()),
 	)
 
-	response, err := c.easypayClient.Api(pageRequest)
+	response, err := c.easypayClient.NotRecordedApi(pageRequest)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get Page response: %v", err)
 	}

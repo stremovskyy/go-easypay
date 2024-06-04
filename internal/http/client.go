@@ -41,6 +41,7 @@ import (
 	"github.com/stremovskyy/go-easypay/consts"
 	"github.com/stremovskyy/go-easypay/easypay"
 	"github.com/stremovskyy/go-easypay/log"
+	"github.com/stremovskyy/recorder"
 )
 
 type Client struct {
@@ -49,13 +50,18 @@ type Client struct {
 	logger         *log.Logger
 	xmlLogger      *log.Logger
 	applePayLogger *log.Logger
+	recorder       recorder.Recorder
 }
 
 func (c *Client) Api(apiRequest *easypay.Request) (*easypay.Response, error) {
-	return c.sendRequest(apiRequest, c.logger)
+	return c.sendRequest(apiRequest, c.logger, true)
 }
 
-func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger) (*easypay.Response, error) {
+func (c *Client) NotRecordedApi(apiRequest *easypay.Request) (*easypay.Response, error) {
+	return c.sendRequest(apiRequest, c.logger, false)
+}
+
+func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger, record bool) (*easypay.Response, error) {
 	requestID := uuid.New().String()
 	logger.Debug("Request ID: %v", requestID)
 	logger.Debug("Request URL: %v", apiRequest.Url)
@@ -69,6 +75,27 @@ func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger) (*
 		logger.Debug("Request: %v", string(jsonBody))
 	}
 
+	ctx := context.WithValue(context.Background(), "request_id", requestID)
+	tags := tagsRetriever(apiRequest)
+
+	if record {
+		metricsMap := make(map[string]string)
+		metricsMap["url"] = apiRequest.Url
+		tim := time.Now()
+		metricsMap["start_timestamp"] = tim.Format("2006-01-02 15:04:05")
+		defer func() {
+			metricsMap["end_timestamp"] = time.Now().Format("2006-01-02 15:04:05")
+			metricsMap["duration"] = fmt.Sprintf("%s", time.Since(tim).String())
+
+			if c.recorder != nil {
+				err := c.recorder.RecordMetrics(ctx, nil, requestID, metricsMap, tags)
+				if err != nil {
+					c.logger.Error("cannot record metrics: %v", err)
+				}
+			}
+		}()
+	}
+
 	req, err := http.NewRequest("POST", apiRequest.Url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		logger.Error("cannot create request: %v", err)
@@ -79,8 +106,22 @@ func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger) (*
 
 	c.setHeaders(req, requestID, apiRequest.Headers, signature)
 
+	if record && c.recorder != nil {
+		err = c.recorder.RecordRequest(ctx, nil, requestID, jsonBody, tags)
+		if err != nil {
+			logger.Error("cannot record request: %v", err)
+		}
+	}
+
 	resp, err := c.client.Do(req)
 	if err != nil {
+		if record && c.recorder != nil {
+			err = c.recorder.RecordError(ctx, nil, requestID, err, tags)
+			if err != nil {
+				logger.Error("cannot record error: %v", err)
+			}
+		}
+
 		logger.Error("cannot send request: %v", err)
 		return nil, err
 	}
@@ -95,6 +136,13 @@ func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger) (*
 	logger.Debug("Response: %v", string(raw))
 	logger.Debug("Response status: %v", resp.StatusCode)
 
+	if record && c.recorder != nil {
+		err = c.recorder.RecordResponse(ctx, nil, requestID, raw, tags)
+		if err != nil {
+			logger.Error("cannot record response: %v", err)
+		}
+	}
+
 	response, err := easypay.UnmarshalJSONResponse(raw)
 	if err != nil {
 		logger.Error("cannot unmarshal response: %v", err)
@@ -106,6 +154,20 @@ func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger) (*
 	}
 
 	return response, nil
+}
+
+func tagsRetriever(request *easypay.Request) map[string]string {
+	tags := make(map[string]string)
+
+	if request.OrderID != nil {
+		tags["order_id"] = fmt.Sprintf("%s", *request.OrderID)
+	}
+
+	if request.TransactionID != nil {
+		tags["transaction_id"] = fmt.Sprintf("%s", *request.TransactionID)
+	}
+
+	return tags
 }
 
 func (c *Client) setHeaders(req *http.Request, requestID string, headers map[string]string, signature string) {
@@ -127,6 +189,12 @@ func (c *Client) setHeaders(req *http.Request, requestID string, headers map[str
 
 func (c *Client) SetClient(cl *http.Client) {
 	c.client = cl
+}
+
+func (c *Client) WithRecorder(rec recorder.Recorder) *Client {
+	c.recorder = rec
+
+	return c
 }
 
 func NewClient(options *Options) *Client {

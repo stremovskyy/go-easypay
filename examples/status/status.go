@@ -31,10 +31,12 @@ import (
 	"github.com/stremovskyy/go-easypay/internal/utils"
 	"github.com/stremovskyy/go-easypay/log"
 	"github.com/stremovskyy/go-easypay/private"
+	"github.com/stremovskyy/recorder/file_recorder"
 )
 
 func main() {
-	client := go_easypay.NewDefaultClient()
+	recorder := file_recorder.NewFileRecorder("records")
+	client := go_easypay.NewClientWithRecorder(recorder)
 
 	merchant := &go_easypay.Merchant{
 		Name:            private.MerchantName,

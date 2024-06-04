@@ -1,2 +1,4 @@
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/stremovskyy/recorder v0.0.2 h1:vJ/tb2D804bD3ivqJI64OJQHQuMmRa+1FHAHSOYLUoc=
+github.com/stremovskyy/recorder v0.0.2/go.mod h1:BiU8T3E4U8tJigrwebcyDkVWUf4/228kdwjerTarkD4=
