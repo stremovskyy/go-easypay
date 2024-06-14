@@ -31,11 +31,19 @@ import (
 	"github.com/stremovskyy/go-easypay/internal/utils"
 	"github.com/stremovskyy/go-easypay/log"
 	"github.com/stremovskyy/go-easypay/private"
-	"github.com/stremovskyy/recorder/file_recorder"
+	"github.com/stremovskyy/recorder/redis_recorder"
 )
 
 func main() {
-	recorder := file_recorder.NewFileRecorder("records")
+	recorder := redis_recorder.NewRedisRecorder(
+		&redis_recorder.Options{
+			Addr:           "localhost:6379",
+			DB:             15,
+			Prefix:         "http",
+			CompressionLvl: 9,
+		},
+	)
+
 	client := go_easypay.NewClientWithRecorder(recorder)
 
 	merchant := &go_easypay.Merchant{

@@ -66,10 +66,11 @@ func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger, re
 	logger.Debug("Request ID: %v", requestID)
 	logger.Debug("Request URL: %v", apiRequest.Url)
 
+	needToRecord := record && c.recorder != nil
+
 	jsonBody, err := json.Marshal(apiRequest)
 	if err != nil {
-		logger.Error("cannot marshal request: %v", err)
-		return nil, fmt.Errorf("cannot marshal request: %v", err)
+		return c.logAndReturnError("cannot marshal request", err, logger, needToRecord, context.Background(), requestID, nil)
 	}
 	if jsonBody != nil {
 		logger.Debug("Request: %v", string(jsonBody))
@@ -78,75 +79,50 @@ func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger, re
 	ctx := context.WithValue(context.Background(), "request_id", requestID)
 	tags := tagsRetriever(apiRequest)
 
-	if record {
-		metricsMap := make(map[string]string)
-		metricsMap["url"] = apiRequest.Url
-		tim := time.Now()
-		metricsMap["start_timestamp"] = tim.Format("2006-01-02 15:04:05")
-		defer func() {
-			metricsMap["end_timestamp"] = time.Now().Format("2006-01-02 15:04:05")
-			metricsMap["duration"] = fmt.Sprintf("%s", time.Since(tim).String())
-
-			if c.recorder != nil {
-				err := c.recorder.RecordMetrics(ctx, nil, requestID, metricsMap, tags)
-				if err != nil {
-					c.logger.Error("cannot record metrics: %v", err)
-				}
-			}
-		}()
+	if needToRecord {
+		startTime := time.Now()
+		defer c.recordMetrics(ctx, requestID, startTime, tags, logger, apiRequest)
 	}
 
 	req, err := http.NewRequest("POST", apiRequest.Url, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		logger.Error("cannot create request: %v", err)
-		return nil, err
+		return c.logAndReturnError("cannot create request", err, logger, needToRecord, ctx, requestID, tags)
 	}
 
 	signature := computeSignature(apiRequest.SecretKey, string(jsonBody))
-
 	c.setHeaders(req, requestID, apiRequest.Headers, signature)
 
-	if record && c.recorder != nil {
+	if needToRecord {
 		err = c.recorder.RecordRequest(ctx, nil, requestID, jsonBody, tags)
 		if err != nil {
-			logger.Error("cannot record request: %v", err)
+			logger.Error("cannot record request", "error", err)
 		}
 	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		if record && c.recorder != nil {
-			err = c.recorder.RecordError(ctx, nil, requestID, err, tags)
-			if err != nil {
-				logger.Error("cannot record error: %v", err)
-			}
-		}
-
-		logger.Error("cannot send request: %v", err)
-		return nil, err
+		return c.logAndReturnError("cannot send request", err, logger, needToRecord, ctx, requestID, tags)
 	}
 	defer resp.Body.Close()
 
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Error("cannot read response: %v", err)
-		return nil, err
+		return c.logAndReturnError("cannot read response", err, logger, needToRecord, ctx, requestID, tags)
 	}
 
 	logger.Debug("Response: %v", string(raw))
 	logger.Debug("Response status: %v", resp.StatusCode)
 
-	if record && c.recorder != nil {
+	if needToRecord {
 		err = c.recorder.RecordResponse(ctx, nil, requestID, raw, tags)
 		if err != nil {
-			logger.Error("cannot record response: %v", err)
+			logger.Error("cannot record response", "error", err)
 		}
 	}
 
 	response, err := easypay.UnmarshalJSONResponse(raw)
 	if err != nil {
-		logger.Error("cannot unmarshal response: %v", err)
-		return nil, err
+		return c.logAndReturnError("cannot unmarshal response", err, logger, needToRecord, ctx, requestID, tags)
 	}
 
 	if !apiRequest.SkipGeneratingError && response.GetError() != nil {
@@ -156,11 +132,36 @@ func (c *Client) sendRequest(apiRequest *easypay.Request, logger *log.Logger, re
 	return response, nil
 }
 
+func (c *Client) logAndReturnError(msg string, err error, logger *log.Logger, needToRecord bool, ctx context.Context, requestID string, tags map[string]string) (*easypay.Response, error) {
+	logger.Error(msg, "error", err)
+	if needToRecord && c.recorder != nil {
+		recordErr := c.recorder.RecordError(ctx, nil, requestID, err, tags)
+		if recordErr != nil {
+			logger.Error("cannot record error", "error", recordErr)
+		}
+	}
+	return nil, err
+}
+
+func (c *Client) recordMetrics(ctx context.Context, requestID string, startTime time.Time, tags map[string]string, logger *log.Logger, request *easypay.Request) {
+	metricsMap := make(map[string]string)
+	metricsMap["end_timestamp"] = time.Now().Format("2006-01-02 15:04:05")
+	metricsMap["duration"] = fmt.Sprintf("%s", time.Since(startTime).String())
+	metricsMap["request_id"] = requestID
+	metricsMap["url"] = request.Url
+
+	err := c.recorder.RecordMetrics(ctx, nil, requestID, metricsMap, tags)
+	if err != nil {
+		logger.Error("cannot record metrics", "error", err)
+	}
+}
+
 func tagsRetriever(request *easypay.Request) map[string]string {
 	tags := make(map[string]string)
-
 	if request.OrderID != nil {
 		tags["order_id"] = fmt.Sprintf("%s", *request.OrderID)
+	} else if request.Order != nil && request.Order.OrderID != nil {
+		tags["order_id"] = fmt.Sprintf("%s", *request.Order.OrderID)
 	}
 
 	if request.TransactionID != nil {
