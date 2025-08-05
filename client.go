@@ -25,8 +25,12 @@
 package go_easypay
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
+	"time"
 
 	"github.com/stremovskyy/go-easypay/consts"
 	"github.com/stremovskyy/go-easypay/easypay"
@@ -372,4 +376,174 @@ func (c *client) createPageID(request *Request) (*string, error) {
 	}
 
 	return response.PageId, nil
+}
+
+func (c *client) GetRecordedExchange(ctx context.Context, requestID string) (*easypay.RecordedExchange, error) {
+	if c.easypayClient == nil || c.easypayClient.GetRecorder() == nil {
+		return nil, fmt.Errorf("recorder is not configured")
+	}
+
+	if requestID == "" {
+		return nil, fmt.Errorf("requestID cannot be empty")
+	}
+
+	recorder := c.easypayClient.GetRecorder()
+
+	request, err := recorder.GetRequest(ctx, requestID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get request for ID %s: %w", requestID, err)
+	}
+
+	response, err := recorder.GetResponse(ctx, requestID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get response for ID %s: %w", requestID, err)
+	}
+
+	exchange := &easypay.RecordedExchange{
+		RequestID: requestID,
+		Request:   request,
+		Response:  response,
+		Tags:      c.extractTagsFromRequest(request),
+		Timestamp: time.Now(),
+	}
+
+	return exchange, nil
+}
+
+func (c *client) extractTagsFromRequest(requestData []byte) map[string]string {
+	tags := make(map[string]string)
+
+	if len(requestData) == 0 {
+		return tags
+	}
+
+	var requestObj map[string]interface{}
+	if err := json.Unmarshal(requestData, &requestObj); err != nil {
+		return tags
+	}
+
+	if orderID, ok := requestObj["order_id"].(string); ok && orderID != "" {
+		tags["order_id"] = orderID
+	}
+
+	if transactionID, ok := requestObj["transaction_id"].(float64); ok {
+		tags["transaction_id"] = fmt.Sprintf("%.0f", transactionID)
+	}
+
+	if url, ok := requestObj["url"].(string); ok && url != "" {
+		tags["url"] = url
+	}
+
+	return tags
+}
+
+func (c *client) GetExchangesByOrderID(ctx context.Context, orderID string) ([]*easypay.RecordedExchange, error) {
+	if c.easypayClient == nil || c.easypayClient.GetRecorder() == nil {
+		return nil, fmt.Errorf("recorder is not configured")
+	}
+
+	if orderID == "" {
+		return nil, fmt.Errorf("orderID cannot be empty")
+	}
+
+	recorder := c.easypayClient.GetRecorder()
+
+	// Use the correct tag:value format for FindByTag
+	redisKeys, err := recorder.FindByTag(ctx, "order_id:"+orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find exchanges by order ID %s: %w", orderID, err)
+	}
+
+	if len(redisKeys) == 0 {
+		return []*easypay.RecordedExchange{}, nil
+	}
+
+	// Extract unique request IDs from the Redis keys
+	requestIDSet := make(map[string]bool)
+	for _, key := range redisKeys {
+		requestID := c.extractRequestIDFromKey(key)
+		if requestID != "" {
+			requestIDSet[requestID] = true
+		}
+	}
+
+	exchanges := make([]*easypay.RecordedExchange, 0, len(requestIDSet))
+	var errors []error
+
+	for requestID := range requestIDSet {
+		exchange, err := c.GetRecordedExchange(ctx, requestID)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to get exchange %s: %w", requestID, err))
+			log.NewLogger("easypay").Error("failed to get exchange", "requestID", requestID, "error", err)
+			continue
+		}
+		exchanges = append(exchanges, exchange)
+	}
+
+	return exchanges, nil
+}
+
+func (c *client) GetExchangesByTransactionID(ctx context.Context, transactionID string) ([]*easypay.RecordedExchange, error) {
+	if c.easypayClient == nil || c.easypayClient.GetRecorder() == nil {
+		return nil, fmt.Errorf("recorder is not configured")
+	}
+
+	if transactionID == "" {
+		return nil, fmt.Errorf("transactionID cannot be empty")
+	}
+
+	recorder := c.easypayClient.GetRecorder()
+
+	// Use the correct tag:value format for FindByTag
+	redisKeys, err := recorder.FindByTag(ctx, "transaction_id:"+transactionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find exchanges by transaction ID %s: %w", transactionID, err)
+	}
+
+	if len(redisKeys) == 0 {
+		return []*easypay.RecordedExchange{}, nil
+	}
+
+	// Extract unique request IDs from the Redis keys
+	requestIDSet := make(map[string]bool)
+	for _, key := range redisKeys {
+		requestID := c.extractRequestIDFromKey(key)
+		if requestID != "" {
+			requestIDSet[requestID] = true
+		}
+	}
+
+	exchanges := make([]*easypay.RecordedExchange, 0, len(requestIDSet))
+	var errors []error
+
+	for requestID := range requestIDSet {
+		exchange, err := c.GetRecordedExchange(ctx, requestID)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to get exchange %s: %w", requestID, err))
+			log.NewLogger("easypay").Error("failed to get exchange", "requestID", requestID, "error", err)
+			continue
+		}
+		exchanges = append(exchanges, exchange)
+	}
+
+	return exchanges, nil
+}
+
+func (c *client) extractRequestIDFromKey(key string) string {
+	if key == "" {
+		return ""
+	}
+
+	parts := strings.Split(key, ":")
+	if len(parts) == 0 {
+		return ""
+	}
+
+	lastPart := parts[len(parts)-1]
+
+	if len(lastPart) > 8 && (strings.Contains(lastPart, "-") || len(lastPart) == 36) {
+		return lastPart
+	}
+
+	return ""
 }

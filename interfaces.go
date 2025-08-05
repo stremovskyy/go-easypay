@@ -1,6 +1,7 @@
 package go_easypay
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/stremovskyy/go-easypay/easypay"
@@ -17,4 +18,8 @@ type Easypay interface {
 	Refund(invoiceRequest *Request) (*easypay.Response, error)
 	Credit(invoiceRequest *Request) (*easypay.Response, error)
 	SetLogLevel(levelDebug log.Level)
+
+	GetRecordedExchange(ctx context.Context, requestID string) (*easypay.RecordedExchange, error)
+	GetExchangesByOrderID(ctx context.Context, orderID string) ([]*easypay.RecordedExchange, error)
+	GetExchangesByTransactionID(ctx context.Context, transactionID string) ([]*easypay.RecordedExchange, error)
 }

@@ -8,7 +8,7 @@ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/r
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/redis/go-redis/v9 v9.5.3 h1:fOAp1/uJG+ZtcITgZOfYFmTKPE7n4Vclj1wZFgRciUU=
-github.com/redis/go-redis/v9 v9.5.3/go.mod h1:hdY0cQFCN4fnSYT6TkisLufl/4W5UIXyv0b/CLO2V2M=
-github.com/stremovskyy/recorder v0.0.3 h1:saj2b6M8q8NtK45pVXuABg+Rb+L7RGvBHp2mxU9UgX8=
-github.com/stremovskyy/recorder v0.0.3/go.mod h1:BiU8T3E4U8tJigrwebcyDkVWUf4/228kdwjerTarkD4=
+github.com/redis/go-redis/v9 v9.11.0 h1:E3S08Gl/nJNn5vkxd2i78wZxWAPNZgUNTp8WIJUAiIs=
+github.com/redis/go-redis/v9 v9.11.0/go.mod h1:huWgSWd8mW6+m0VPhJjSSQ+d6Nh1VICQ6Q5lHuCH/Iw=
+github.com/stremovskyy/recorder v1.0.0 h1:/RdDgMOWyScRguKnf7OLn7CvItXIAcp/2ZjR59EEDjM=
+github.com/stremovskyy/recorder v1.0.0/go.mod h1:BiU8T3E4U8tJigrwebcyDkVWUf4/228kdwjerTarkD4=
